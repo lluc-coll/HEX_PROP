@@ -12,7 +12,7 @@ import java.util.List;
  * @author llucc
  */
 public class PlayerMinimax implements IPlayer, IAuto {
-    Heuristica h;
+    Heuristica h = new Heuristica();
     String name;
     int depth;
     long playsExplored;
@@ -28,6 +28,7 @@ public class PlayerMinimax implements IPlayer, IAuto {
         color = hgs.getCurrentPlayerColor();
         playsExplored = 0;
         MyStatus m = new MyStatus(hgs);
+        h.heuristica(m, color);
         return new PlayerMove(miniMax(m), playsExplored, depth, SearchType.MINIMAX);
     }
 
