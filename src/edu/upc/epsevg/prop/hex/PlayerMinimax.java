@@ -5,13 +5,14 @@
 package edu.upc.epsevg.prop.hex;
 
 import java.awt.Point;
-import java.util.List;
+import java.util.*;
 
 /**
  *
  * @author llucc
  */
 public class PlayerMinimax implements IPlayer, IAuto {
+    public static int[][][] taulaHash;
     Heuristica h = new Heuristica();
     String name;
     int depth;
@@ -21,6 +22,7 @@ public class PlayerMinimax implements IPlayer, IAuto {
     public PlayerMinimax(int depth) {
         this.name = "NOMBRE";
         this.depth = depth;
+        taulaHash = createHashingTable(11);
     }
 
     @Override
@@ -28,7 +30,7 @@ public class PlayerMinimax implements IPlayer, IAuto {
         color = hgs.getCurrentPlayerColor();
         playsExplored = 0;
         MyStatus m = new MyStatus(hgs);
-        h.heuristica(m, color);
+        h.heuristica(m.graf1, m.graf2, m.ini, m.end);
         return new PlayerMove(miniMax(m), playsExplored, depth, SearchType.MINIMAX);
     }
 
@@ -62,6 +64,7 @@ public class PlayerMinimax implements IPlayer, IAuto {
         long tiempoFinal = System.currentTimeMillis();
         double tiempo = (tiempoFinal - tiempoInicial) / 1000.0;
         System.out.println("Tiempo: " + tiempo + " s");
+        System.out.println(columnaJugar);
         return columnaJugar;
     }
 
@@ -114,5 +117,16 @@ public class PlayerMinimax implements IPlayer, IAuto {
         return min;
     }
 
-    
+    public static int[][][] createHashingTable(int size){
+        int[][][] table = new int[size][size][3];
+        Random ran = new Random();
+        for(int i = 0; i<size; i++){
+            for(int j = 0; j<size; j++){
+                for(int z = 0; z<3; z++){
+                    table[i][j][z] = ran.nextInt();
+                }
+            }
+        }
+        return table;
+    }
 }

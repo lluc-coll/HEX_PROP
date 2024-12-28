@@ -118,7 +118,7 @@ public class PlayerIterativeMinimax implements IPlayer, IAuto {
 
         if (depth == 0 || status.isGameOver()) {
             playsExplored++;
-            return h.heuristica(status, color); // Evaluación heurística
+            return h.heuristica(status.graf1, status.graf2, status.ini, status.end); // Evaluación heurística
         }
 
         int maxScore = Integer.MIN_VALUE;
@@ -148,7 +148,7 @@ public class PlayerIterativeMinimax implements IPlayer, IAuto {
 
         if (depth == 0 || status.isGameOver()) {
             playsExplored++;
-            return h.heuristica(status, color); // Evaluación heurística
+            return h.heuristica(status.graf1, status.graf2, status.ini, status.end); // Evaluación heurística
         }
 
         int minScore = Integer.MAX_VALUE;
