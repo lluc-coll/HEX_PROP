@@ -16,7 +16,7 @@ public class PlayerIterativeMinimax implements IPlayer, IAuto {
     private boolean timeoutFlag; // Bandera para timeout
     private long startTime; // Tiempo inicial
     private long timeoutLimit; // Tiempo máximo permitido en milisegundos
-
+    public static int [][][] taulaHash;
     /**
      * Constructor del jugador.
      *
@@ -27,6 +27,7 @@ public class PlayerIterativeMinimax implements IPlayer, IAuto {
         this.name = "IterativeMinimaxPlayer";
         this.maxDepth = depth;
         this.timeoutLimit = timeoutLimit;
+        taulaHash = Heuristica.createHashingTable(11);
     }
 
     @Override
