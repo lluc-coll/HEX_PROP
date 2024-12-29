@@ -5,22 +5,16 @@
 package edu.upc.epsevg.prop.hex;
 
 import java.awt.Point;
-import java.util.AbstractMap;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.PriorityQueue;
-import java.util.Set;
+import java.util.*;
+import java.util.Map.Entry;
 
 /**
  *
  * @author llucc
  */
 public class Heuristica {
-
-    public int heuristica(Map<Point, List<Map.Entry<Point, Integer>>> graf1, Map<Point, List<Map.Entry<Point, Integer>>> graf2, Point ini, Point end) {
+    
+    public int heuristica(Map<Point, Map<Point, Integer>> graf1, Map<Point, Map<Point, Integer>> graf2, Point ini, Point end) {
         int dij1 = dijkstra(graf1, ini, end);
         int dij2 = dijkstra(graf2, ini, end);
 
@@ -28,37 +22,33 @@ public class Heuristica {
         return 0;
     }
 
-    public int dijkstra(Map<Point, List<Map.Entry<Point, Integer>>> grafMap, Point start, Point target) {
-        PriorityQueue<Map.Entry<Point, Integer>> PQ = new PriorityQueue<>(Map.Entry.comparingByValue());
-        Set<Point> visited = new HashSet<>();
-
+    public int dijkstra(Map<Point, Map<Point, Integer>> grafMap, Point start, Point target) {
         Map<Point, Integer> distances = new HashMap<>();
-        /*for (Point node : grafMap.keySet()) {
-            distances.put(node, Integer.MAX_VALUE);
-        }*/
+        PriorityQueue<Point> PQ = new PriorityQueue<>(Comparator.comparingInt(distances::get));
+        Set<Point> visited = new HashSet<>();
+        
         distances.put(start, 0);
-        PQ.add(new AbstractMap.SimpleEntry<>(start, 0));
+        PQ.add(start);
 
         while (!PQ.isEmpty()) {
-            Map.Entry<Point, Integer> current = PQ.poll();
-            Point currentP = current.getKey();
+            Point currentP = PQ.poll();
             if (currentP.equals(target)) {
-                /*for (int i = 0; i < 11; i++) {
+                for (int i = 0; i < 11; i++) {
                     for(int s=0; s<i;s++){System.out.print(" ");}
                     for (int j = 0; j < 11; j++) {
                         System.out.print(distances.get(new Point(j, i)) + " ");
                     }
                     System.out.println();
-                }*/
+                }
                 System.out.println("a");
                 return distances.get(currentP);
             }
 
             if (!visited.contains(currentP)) {
                 visited.add(currentP);
-                List<Map.Entry<Point, Integer>> ngbs = grafMap.get(currentP);
+                Map<Point, Integer> ngbs = grafMap.get(currentP);
                 if (ngbs != null) {
-                    for (Map.Entry<Point, Integer> ngb : ngbs) {
+                    for (Entry<Point, Integer> ngb : ngbs.entrySet()) {
                         Point ngbP = ngb.getKey();
                         int dist = ngb.getValue();
 
@@ -66,7 +56,7 @@ public class Heuristica {
                             int newDist = distances.get(currentP) + dist;
                             if (newDist < distances.getOrDefault(ngbP, Integer.MAX_VALUE)) {
                                 distances.put(ngbP, newDist);
-                                PQ.add(new AbstractMap.SimpleEntry<>(ngbP, newDist));
+                                PQ.add(ngbP);
                             }
                         }
                     }
@@ -79,5 +69,18 @@ public class Heuristica {
 
     public List<MoveNode> obtenerJugadas(HexGameStatus h) {
         return h.getMoves();
+    }
+    
+    public static int[][][] createHashingTable(int size){
+        int[][][] table = new int[size][size][3];
+        Random ran = new Random();
+        for(int i = 0; i<size; i++){
+            for(int j = 0; j<size; j++){
+                for(int z = 0; z<3; z++){
+                    table[i][j][z] = ran.nextInt();
+                }
+            }
+        }
+        return table;
     }
 }
