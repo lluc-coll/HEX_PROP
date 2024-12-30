@@ -89,7 +89,7 @@ public class MyStatus extends HexGameStatus {
                         map.get(ini).put(p, getPos(p) == 1 ? 1000 : getPos(p) == 0 ? 2 : 0);
                     }
                     if (j == 1 && i != getSize() - 1 && getPos(p) == -1) {
-                        if (getPos(i, j-1) == 0 && getPos(i + 1, j - 1) == 0) {
+                        if (getPos(i, j - 1) == 0 && getPos(i + 1, j - 1) == 0) {
                             map.get(ini).put(p, 1);
                         }
                     }
@@ -97,7 +97,7 @@ public class MyStatus extends HexGameStatus {
                         map.get(p).put(end, 0);
                     }
                     if (j == getSize() - 2 && i != 0 && getPos(p) == -1) {
-                        if (getPos(i, j - 1) == 0 && getPos(i + 1, j - 1) == 0) {
+                        if (getPos(i, j + 1) == 0 && getPos(i - 1, j + 1) == 0) {
                             map.get(p).put(end, 1);
                         }
                     }
@@ -152,79 +152,130 @@ public class MyStatus extends HexGameStatus {
 
     public void graphsUpdate(Point p, int col) {
         int[][] directions = {
+            {-1, 0}, // Izquierda
+            {-1, 1}, // Arriba-izquierda
+            {0, 1}, // Arriba-derecha
             {1, 0}, // Derecha
             {1, -1}, // Abajo-derecha
             {0, -1}, // Abajo-izquierda
-            {-1, 0}, // Izquierda
-            {-1, 1}, // Arriba-izquierda
-            {0, 1} // Arriba-derecha
+            {-2, 1}, // Arriba doble
+            {-1, 2}, // Arriba-derecha doble
+            {1, 1}, // Abajo-derecha doble
+            {2, -1}, // Abajo doble
+            {1, -2}, // Abajo-izquierda doble
+            {-1, -1} // Arriba-izquierda doble
         };
-
+        graf1.put(p, getNeighbors(p, myColor));
+        graf2.put(p, getNeighbors(p, -myColor));
         for (int[] dir : directions) {
             int x = p.x + dir[0];
             int y = p.y + dir[1];
+            Point aux = new Point(x, y);
             if (x >= 0 && y >= 0 && x < getSize() && y < getSize()) {
-
-                int val1 = 2;
-                int val2 = 2;
-                if (getPos(p) == col) {
-                    val1 = 0;
-                    val2 = 1000;
-                } else if (getPos(p) == -col) {
-                    val1 = 1000;
-                    val2 = 0;
-                }
-
-                graf1.get(new Point(x, y)).put(p, val1);
-                //System.out.println(p + ":" + col + "->" + x + "." + y + ";" + val1 + " " + graf1.get(new Point(x, y)).get(p));
-                graf2.get(new Point(x, y)).put(p, val2);
+                graf1.put(aux, getNeighbors(aux, myColor));
+                graf2.put(aux, getNeighbors(aux, -myColor));
             }
         }
         int i = p.x, j = p.y;
-        boolean g1 = graf1.get(ini).containsKey(p);
-        System.out.println(i+":"+g1+"."+myColor);
-            if (i == 0) {
-                if (g1) graf1.get(ini).put(p, getPos(p) == -myColor ? 1000 : getPos(p) == 0 ? 2 : 0);
-                else graf2.get(ini).put(p, getPos(p) == myColor ? 1000 : getPos(p) == 0 ? 2 : 0);
+        // Comprovaciones para updatear los nodos auxiliares (parte de los adyacentes directamente)
+        boolean g1 = graf1.get(ini).containsKey(p); // Comprovem quin graf hem de modificar
+        if (i == 0) {
+            if (g1) {
+                graf1.get(ini).put(p, getPos(p) == -myColor ? 1000 : getPos(p) == 0 ? 2 : 0);
+                graf1.get(ini).remove(new Point(i+1, j==0 ? j : j-1));
+                graf1.get(ini).remove(new Point(i+1, j));
+            } else {
+                graf2.get(ini).put(p, getPos(p) == myColor ? 1000 : getPos(p) == 0 ? 2 : 0);
+                graf2.get(ini).remove(new Point(i+1, j==0 ? j : j-1));
+                graf2.get(ini).remove(new Point(i+1, j));
             }
-            if (i == 1 && j != getSize() - 1 && getPos(p) == (g1 ? myColor : -myColor)) {
-                if (getPos(i - 1, j) == 0 && getPos(i - 1, j + 1) == 0) {
-                    if (g1) graf1.get(ini).put(p, 1);
-                    else graf2.get(ini).put(p, 1);
+        }
+        if (j == 0) {
+            if (g1) {
+                graf1.get(ini).put(p, getPos(p) == myColor ? 1000 : getPos(p) == 0 ? 2 : 0);
+                graf1.get(ini).remove(new Point(i, j+1));
+                graf1.get(ini).remove(new Point(i==0 ? i : i-1, j+1));
+            } else {
+                graf2.get(ini).put(p, getPos(p) == -myColor ? 1000 : getPos(p) == 0 ? 2 : 0);
+                graf2.get(ini).remove(new Point(i, j+1));
+                graf2.get(ini).remove(new Point(i==0 ? i : i-1, j+1));
+            }
+        }
+        g1 = graf1.get(p).containsKey(end); // Comprovem quin graf hem de modificar
+        if (i == getSize() - 1) {
+            if (g1) {
+                graf1.get(p).put(end, 0);
+                graf1.get(ini).remove(new Point(i-1, j==getSize()-1 ? j : j+1));
+                graf1.get(ini).remove(new Point(i-1, j));
+            } else {
+                graf2.get(p).put(end, 0);
+                graf2.get(ini).remove(new Point(i-1, j==getSize()-1 ? j : j+1));
+                graf2.get(ini).remove(new Point(i-1, j));
+            }
+        }
+        if (j == getSize() - 1) {
+            if (g1) {
+                graf1.get(p).put(end, 0);
+                graf1.get(ini).remove(new Point(i-1, j-1));
+                graf1.get(ini).remove(new Point(i==getSize()-1 ? i : i+1, j-1));
+            } else {
+                graf2.get(p).put(end, 0);
+                graf2.get(ini).remove(new Point(i-1, j-1));
+                graf2.get(ini).remove(new Point(i==getSize()-1 ? i : i+1, j-1));
+            }
+        }
+        // Comprovaciones para updatear los nodos auxiliares (parte de los adyacentes indirectamente[dobles])
+        if (i == 1 && j != getSize() - 1) {
+            g1 = graf1.get(ini).containsKey(new Point(i - 1, j)); // Comprovem quin graf hem de modificar
+            if (getPos(i - 1, j) == 0 && getPos(i - 1, j + 1) == 0 && getPos(p) == (g1 ? myColor : -myColor)) {
+                if (g1) {
+                    graf1.get(ini).put(p, 1);
+                } else {
+                    graf2.get(ini).put(p, 1);
                 }
+            } else {
+                graf1.get(ini).remove(p);
+                graf2.get(ini).remove(p);
             }
-            if (i == getSize() - 1) {
-                if (g1) graf1.get(p).put(end, 0);
-                else graf2.get(p).put(end, 0);
-            }
-            if (i == getSize() - 2 && j != 0 && getPos(p) == (g1 ? myColor : -myColor)) {
-                if (getPos(i + 1, j) == 0 && getPos(i + 1, j - 1) == 0) {
-                    if (g1) graf1.get(p).put(end, 1);
-                    else graf2.get(p).put(end, 1);
-                }
-            }
-      
-            if (j == 0) {
-                if (g1) graf2.get(ini).put(p, getPos(p) == myColor ? 1000 : getPos(p) == 0 ? 2 : 0);
-                else graf1.get(ini).put(p, getPos(p) == -myColor ? 1000 : getPos(p) == 0 ? 2 : 0);
-            }
-            if (j == 1 && i != getSize() - 1 && getPos(p) == (g1 ? myColor : -myColor)) {
-                if (getPos(i, j-1) == 0 && getPos(i + 1, j - 1) == 0) {
-                    System.out.println("aaa");
-                    if (g1) graf2.get(ini).put(p, 1);
-                    else graf1.get(ini).put(p, 1);
-                }
-            }
-            if (j == getSize() - 1) {
-                if (g1) graf2.get(p).put(end, 0);
-                else graf2.get(p).put(end, 0);
-            }
-            if (j == getSize() - 2 && i != 0 && getPos(p) == (g1 ? myColor : -myColor)) {
-                if (getPos(i, j - 1) == 0 && getPos(i + 1, j - 1) == 0) {
-                    if (g1) graf2.get(p).put(end, 1);
+        }
+        if (i == getSize() - 2 && j != 0) {
+            g1 = graf1.get(new Point(i + 1, j)).containsKey(end); // Comprovem quin graf hem de modificar
+            if (getPos(i + 1, j) == 0 && getPos(i + 1, j - 1) == 0 && getPos(p) == (g1 ? myColor : -myColor)) {
+                if (g1) {
                     graf1.get(p).put(end, 1);
+                } else {
+                    graf2.get(p).put(end, 1);
                 }
+            } else {
+                graf1.get(p).remove(end);
+                graf2.get(p).remove(end);
             }
-        
+        }
+        if (j == 1 && i != getSize() - 1 && getPos(p) == (g1 ? myColor : -myColor)) {
+            if (getPos(i, j - 1) == 0 && getPos(i + 1, j - 1) == 0 && getPos(p) == (g1 ? myColor : -myColor)) {
+                g1 = graf1.get(ini).containsKey(new Point(i, j - 1)); // Comprovem quin graf hem de modificar
+                if (g1) {
+                    graf1.get(ini).put(p, 1);
+                } else {
+                    graf2.get(ini).put(p, 1);
+                }
+            } else {
+                graf1.get(ini).remove(p);
+                graf2.get(ini).remove(p);
+            }
+        }
+        if (j == getSize() - 2 && i != 0 && getPos(p) == (g1 ? myColor : -myColor)) {
+            g1 = graf1.get(new Point(i, j + 1)).containsKey(end); // Comprovem quin graf hem de modificar
+            if (getPos(i, j + 1) == 0 && getPos(i - 1, j + 1) == 0 && getPos(p) == (g1 ? myColor : -myColor)) {
+                if (g1) {
+                    graf1.get(p).put(end, 1);
+                } else {
+                    graf2.get(p).put(end, 1);
+                }
+            } else {
+                graf1.get(p).remove(end);
+                graf2.get(p).remove(end);
+            }
+        }
     }
 }
