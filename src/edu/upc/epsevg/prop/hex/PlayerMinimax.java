@@ -67,7 +67,7 @@ public class PlayerMinimax implements IPlayer, IAuto {
 
     /**
      * Marca el jugador com a no disponible per gestionar el timeout.
-     * (Actualment no implementat).
+     * (Actualment no implementat ja que va per profunditat, no per temps).
      */
     @Override
     public void timeout() {
@@ -110,7 +110,6 @@ public class PlayerMinimax implements IPlayer, IAuto {
 
         long tiempoFinal = System.currentTimeMillis();
         double tiempo = (tiempoFinal - tiempoInicial) / 1000.0;
-        System.out.println("Temps: " + tiempo + " s");
         return columnaJugar;
     }
 
