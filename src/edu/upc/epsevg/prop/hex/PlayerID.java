@@ -78,7 +78,6 @@ public class PlayerID implements IPlayer, IAuto {
         while (!timeoutFlag) {
             try {
                 bestMove = iterativeMinimax(m, depth);
-                //System.out.println("Profunditat assolida: " + depth);
                 depth++;
             } catch (TimeoutException e) {
                 break;
