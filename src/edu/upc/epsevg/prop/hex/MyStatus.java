@@ -17,18 +17,61 @@ import java.util.Map;
  * @author llucc
  */
 public class MyStatus extends HexGameStatus {
+    /**
+     * Instància de la classe Heuristica que proporciona les funcions d'avaluació.
+     */
     Heuristica h = Heuristica.getInstance();
-    int myColor;
-    int hash = 0;
-    int valEstatic = 0;
-    Map<Point, Map<Point, Integer>> graf1;
-    Map<Point, Map<Point, Integer>> graf2;
-    Point ini = new Point(0, -1);
-    Point end = new Point(-1, 0);
-    Map<Point, Integer> tuples1 = new HashMap<>();
-    Map<Point, Integer> tuples2 = new HashMap<>();
-    boolean aaa;
 
+    /**
+     * Color del jugador actual.
+     */
+    int myColor;
+
+    /**
+     * Valor hash que representa l'estat únic del joc.
+     */
+    int hash = 0;
+
+    /**
+     * Valor estàtic que mesura el valor heurístic estàtic del tauler.
+     */
+    int valEstatic = 0;
+
+    /**
+     * Graf que representa les connexions del jugador actual.
+     */
+    Map<Point, Map<Point, Integer>> graf1;
+
+    /**
+     * Graf que representa les connexions de l'oponent.
+     */
+    Map<Point, Map<Point, Integer>> graf2;
+
+    /**
+     * Node inicial virtual del graf.
+     */
+    Point ini = new Point(0, -1);
+
+    /**
+     * Node final virtual del graf.
+     */
+    Point end = new Point(-1, 0);
+
+    /**
+     * Map de tuples del jugador actual per optimitzar heurístiques.
+     */
+    Map<Point, Integer> tuples1 = new HashMap<>();
+
+    /**
+     * Map de tuples de l'oponent per optimitzar heurístiques.
+     */
+    Map<Point, Integer> tuples2 = new HashMap<>();
+
+ /**
+     * Constructor que inicialitza l'estat a partir d'un estat de joc HexGameStatus.
+     * 
+     * @param hgs L'estat del joc HexGameStatus inicial.
+     */    
     public MyStatus(HexGameStatus hgs) {
         super(hgs);
         myColor = getCurrentPlayerColor();
@@ -41,7 +84,12 @@ public class MyStatus extends HexGameStatus {
         graf1 = getTableGraph(myColor);
         graf2 = getTableGraph(-myColor);
     }
-
+    
+    /**
+     * Constructor de còpia que inicialitza l'estat a partir d'una altra instància de MyStatus.
+     * 
+     * @param hgs L'objecte MyStatus original.
+     */
     public MyStatus(MyStatus hgs) {
         super(hgs);
         this.hash = hgs.hash;
@@ -52,7 +100,12 @@ public class MyStatus extends HexGameStatus {
         this.end = hgs.end;
         this.myColor = hgs.myColor;
     }
-
+    
+    /**
+     * Col·loca una peça al tauler i actualitza els valors del graf, tuples i hash.
+     * 
+     * @param point La posició de la peça a col·locar.
+     */
     @Override
     public void placeStone(Point point) {
         super.placeStone(point);
@@ -60,7 +113,12 @@ public class MyStatus extends HexGameStatus {
         valEstatic += (10 - (Math.abs(point.x - getSize() / 2) + Math.abs(point.y - getSize() / 2))) * getPos(point);
         graphsUpdate(point, -getCurrentPlayerColor());
     }
-
+    
+    /**
+     * Calcula la heurística de l'estat actual combinant múltiples factors.
+     * 
+     * @return El valor heurístic calculat.
+     */
     public int calculHeuristica() {
         int val = 0;
         val += h.heuristica(graf1, graf2, ini, end)*4;
@@ -68,15 +126,33 @@ public class MyStatus extends HexGameStatus {
         val += (900-(tuples1.values().stream().mapToInt(Integer::intValue).sum()) - (900-tuples2.values().stream().mapToInt(Integer::intValue).sum()))*2;
         return val;
     }
-
+    
+    /**
+     * Genera un nou valor hash per a una posició específica.
+     * 
+     * @param p La posició que es vol considerar.
+     * @return El valor hash actualitzat.
+     */
     public int getNewHash(Point p) {
         return hash ^ h.taulaHash[p.x][p.y][getPos(p.x, p.y) + 1];
     }
-
+    
+    /**
+     * Genera un nou valor estàtic per a una posició específica.
+     * 
+     * @param p La posició que es vol considerar.
+     * @return El valor estàtic actualitzat.
+     */
     public int getNewValEstatic(Point p) {
         return valEstatic + (10 - (Math.abs(p.x - getSize() / 2) + Math.abs(p.y - getSize() / 2))) * getPos(p);
     }
-
+    
+    /**
+     * Genera un graf de connexions del tauler per a un color específic.
+     * 
+     * @param col El color per al qual es vol generar el graf.
+     * @return El graf resultant.
+     */
     public Map<Point, Map<Point, Integer>> getTableGraph(int col) {
         Map<Point, Map<Point, Integer>> map = new HashMap<>();
         for (int i = 0; i < getSize(); i++) {
@@ -128,7 +204,14 @@ public class MyStatus extends HexGameStatus {
         }
         return map;
     }
-
+    
+    /**
+     * Genera els veïns d'un node del graf per a un color específic.
+     * 
+     * @param p El node central.
+     * @param col El color del jugador.
+     * @return Un mapa dels veïns i els seus pesos.
+     */
     public Map<Point, Integer> getNeighbors(Point p, int col) {
         (myColor == col ? tuples1 : tuples2).remove(p);
         Map<Point, Integer> ngbs = new HashMap<>();
@@ -173,7 +256,13 @@ public class MyStatus extends HexGameStatus {
 
         return ngbs;
     }
-
+    
+    /**
+     * Actualitza els grafs després de col·locar una peça.
+     * 
+     * @param p La posició de la peça.
+     * @param col El color del jugador.
+     */
     public void graphsUpdate(Point p, int col) {
         int[][] directions = {
             {-1, 0}, // Izquierda
@@ -259,7 +348,12 @@ public class MyStatus extends HexGameStatus {
             }
         }
     }
-
+    
+    /**
+     * Obté una llista ordenada de moviments possibles des de l'estat actual.
+     * 
+     * @return La llista de moviments.
+     */
     public List<MoveNode> obtenerJugadas() {
         List<MoveNode> l = getMoves();
         l.sort((a, b) -> {
