@@ -105,9 +105,9 @@ public class Heuristica {
      */
     public List<MoveNode> obtenerJugadas(MyStatus h) {
         List<MoveNode> l = h.getMoves();
-        if (!pruned.contains(h.hash) && millorJugada.containsKey(h.hash)) {
+        if (!pruned.contains(h.hash) && millorJugada.containsKey(h.hash) && h.getPos(millorJugada.get(h.hash)) == 0) {
             l.remove(new MoveNode(new Point(millorJugada.get(h.hash))));
-            l.add(0, new MoveNode(new Point(millorJugada.get(h.hash))));
+            l.addFirst(new MoveNode(new Point(millorJugada.get(h.hash))));
         }
         return l;
     }

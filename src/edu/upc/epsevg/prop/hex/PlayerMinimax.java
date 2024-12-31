@@ -46,7 +46,6 @@ public class PlayerMinimax implements IPlayer, IAuto {
     public PlayerMinimax(int depth) {
         this.name = "HEXpertos";
         this.depth = depth;
-        h.taulaHash = Heuristica.createHashingTable(11);
     }
 
     /**
@@ -57,6 +56,9 @@ public class PlayerMinimax implements IPlayer, IAuto {
      */
     @Override
     public PlayerMove move(HexGameStatus hgs) {
+        if (h.taulaHash == null) {
+            h.taulaHash = Heuristica.createHashingTable(hgs.getSize());
+        }
         color = hgs.getCurrentPlayerColor();
         playsExplored = 0;
         MyStatus m = new MyStatus(hgs);

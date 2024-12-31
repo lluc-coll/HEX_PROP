@@ -8,8 +8,8 @@ import java.awt.Point;
 import java.util.List;
 
 /**
-
- * 
+ *
+ *
  * @author llucc
  */
 public class PlayerID implements IPlayer, IAuto {
@@ -50,21 +50,24 @@ public class PlayerID implements IPlayer, IAuto {
     Point bestMove;
 
     /**
-     * Constructor del jugador. Inicialitza el nom del jugador i les taules de dispersió.
+     * Constructor del jugador. Inicialitza el nom del jugador i les taules de
+     * dispersió.
      */
     public PlayerID() {
         this.name = "HEXpertos";
-        h.taulaHash = Heuristica.createHashingTable(11);
     }
 
     /**
      * Selecciona el millor moviment utilitzant una cerca iterativa amb Minimax.
-     * 
+     *
      * @param hgs L'estat actual del joc (HexGameStatus).
      * @return Un objecte {@link PlayerMove} amb el millor moviment calculat.
      */
     @Override
     public PlayerMove move(HexGameStatus hgs) {
+        if (h.taulaHash == null) {
+            h.taulaHash = Heuristica.createHashingTable(hgs.getSize());
+        }
         timeoutFlag = false;
         color = hgs.getCurrentPlayerColor();
         playsExplored = 0;
@@ -81,8 +84,7 @@ public class PlayerID implements IPlayer, IAuto {
                 break;
             }
         }
-        System.out.println(bestMove);
-        return new PlayerMove(bestMove, playsExplored, depth-1, SearchType.MINIMAX_IDS);
+        return new PlayerMove(bestMove, playsExplored, depth - 1, SearchType.MINIMAX_IDS);
     }
 
     /**
@@ -95,7 +97,7 @@ public class PlayerID implements IPlayer, IAuto {
 
     /**
      * Retorna el nom del jugador.
-     * 
+     *
      * @return Nom del jugador.
      */
     @Override
@@ -104,8 +106,9 @@ public class PlayerID implements IPlayer, IAuto {
     }
 
     /**
-     * Realitza la cerca iterativa utilitzant l'algorisme Minimax fins a la profunditat donada.
-     * 
+     * Realitza la cerca iterativa utilitzant l'algorisme Minimax fins a la
+     * profunditat donada.
+     *
      * @param status L'estat actual del joc.
      * @param depth La profunditat màxima per a aquesta iteració.
      * @throws TimeoutException Si es produeix un timeout durant la cerca.
@@ -132,7 +135,7 @@ public class PlayerID implements IPlayer, IAuto {
 
     /**
      * Calcula el valor màxim de Minimax per a un estat donat.
-     * 
+     *
      * @param status L'estat actual del joc.
      * @param depth La profunditat restant.
      * @param alpha El millor valor garantit per al jugador MAX.
@@ -150,7 +153,7 @@ public class PlayerID implements IPlayer, IAuto {
             playsExplored++;
             return h.heuristica(status.graf1, status.graf2, status.ini, status.end);
         }
-        
+
         List<MoveNode> movimientos = h.obtenerJugadas(status);
 
         for (MoveNode move : movimientos) {
@@ -175,7 +178,7 @@ public class PlayerID implements IPlayer, IAuto {
 
     /**
      * Calcula el valor mínim de Minimax per a un estat donat.
-     * 
+     *
      * @param status L'estat actual del joc.
      * @param depth La profunditat restant.
      * @param alpha El millor valor garantit per al jugador MAX.
@@ -193,7 +196,7 @@ public class PlayerID implements IPlayer, IAuto {
             playsExplored++;
             return h.heuristica(status.graf1, status.graf2, status.ini, status.end);
         }
-        
+
         List<MoveNode> movimientos = h.obtenerJugadas(status);
 
         for (MoveNode move : movimientos) {
@@ -218,7 +221,7 @@ public class PlayerID implements IPlayer, IAuto {
 
     /**
      * Comprova si s'ha produït un timeout.
-     * 
+     *
      * @throws TimeoutException Si el timeout s'ha activat.
      */
     private void checkTimeout() throws TimeoutException {
@@ -234,7 +237,7 @@ public class PlayerID implements IPlayer, IAuto {
 
         /**
          * Constructor de l'excepció TimeoutException.
-         * 
+         *
          * @param message El missatge de l'excepció.
          */
         public TimeoutException(String message) {
