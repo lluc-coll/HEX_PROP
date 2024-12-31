@@ -17,10 +17,6 @@ import java.util.Map;
  * @author llucc
  */
 public class MyStatus extends HexGameStatus {
-
-    // crear una taula estatica amb size == hgs i per cada casella agafar un valor random per 0, 1, -1
-    // recorrer la taula i per cada casella fer hash ^= taulaEstatica[i][j][z] (on < seria 0, 1, -1 o alguna cosa aixi)
-    // i per cada place stone fer hash ^= taulaEstatica[placeStone.i][placeStone.j][placeStone.color]
     Heuristica h = Heuristica.getInstance();
     int myColor;
     int hash = 0;
@@ -31,6 +27,7 @@ public class MyStatus extends HexGameStatus {
     Point end = new Point(-1, 0);
     Map<Point, Integer> tuples1 = new HashMap<>();
     Map<Point, Integer> tuples2 = new HashMap<>();
+    boolean aaa;
 
     public MyStatus(HexGameStatus hgs) {
         super(hgs);
@@ -66,10 +63,9 @@ public class MyStatus extends HexGameStatus {
 
     public int calculHeuristica() {
         int val = 0;
-        val += h.heuristica(graf1, graf2, ini, end);
+        val += h.heuristica(graf1, graf2, ini, end)*4;
         val += valEstatic;
-        // falta posar el valor sumatori de les tuples.
-        val += (900-(tuples1.values().stream().mapToInt(Integer::intValue).sum()) - (900-tuples2.values().stream().mapToInt(Integer::intValue).sum()));
+        val += (900-(tuples1.values().stream().mapToInt(Integer::intValue).sum()) - (900-tuples2.values().stream().mapToInt(Integer::intValue).sum()))*2;
         return val;
     }
 
@@ -269,7 +265,7 @@ public class MyStatus extends HexGameStatus {
         l.sort((a, b) -> {
             int scoreA = getNewValEstatic(a.getPoint());
             int scoreB = getNewValEstatic(b.getPoint());
-            return Integer.compare(scoreB, scoreA); // Sort Descending
+            return Integer.compare(scoreB, scoreA);
         });
         return l;
     }
