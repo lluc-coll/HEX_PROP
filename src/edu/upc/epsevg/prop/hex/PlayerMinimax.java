@@ -8,7 +8,7 @@ import java.awt.Point;
 import java.util.*;
 
 /**
-
+ *
  * @author llucc
  */
 public class PlayerMinimax implements IPlayer, IAuto {
@@ -40,7 +40,7 @@ public class PlayerMinimax implements IPlayer, IAuto {
 
     /**
      * Constructor del jugador Minimax.
-     * 
+     *
      * @param depth Profunditat màxima per a l'algorisme Minimax.
      */
     public PlayerMinimax(int depth) {
@@ -51,7 +51,7 @@ public class PlayerMinimax implements IPlayer, IAuto {
 
     /**
      * Selecciona el millor moviment utilitzant l'algorisme Minimax.
-     * 
+     *
      * @param hgs Estat actual del joc (HexGameStatus).
      * @return Un objecte {@link PlayerMove} amb el millor moviment calculat.
      */
@@ -74,7 +74,7 @@ public class PlayerMinimax implements IPlayer, IAuto {
 
     /**
      * Retorna el nom del jugador.
-     * 
+     *
      * @return Nom del jugador.
      */
     @Override
@@ -83,8 +83,9 @@ public class PlayerMinimax implements IPlayer, IAuto {
     }
 
     /**
-     * Cerca el millor moviment utilitzant l'algorisme Minimax amb poda alfa-beta.
-     * 
+     * Cerca el millor moviment utilitzant l'algorisme Minimax amb poda
+     * alfa-beta.
+     *
      * @param hgs L'estat actual del joc.
      * @return El punt que representa el millor moviment calculat.
      */
@@ -94,7 +95,7 @@ public class PlayerMinimax implements IPlayer, IAuto {
         Point columnaJugar = new Point(0, 0);
         int alpha = Integer.MIN_VALUE, beta = Integer.MAX_VALUE;
 
-        List<MoveNode> movimientos = h.obtenerJugadas(hgs);
+        List<MoveNode> movimientos = hgs.obtenerJugadas();
         for (MoveNode jugada : movimientos) {
             MyStatus nova = new MyStatus(hgs);
             nova.placeStone(jugada.getPoint());
@@ -108,13 +109,12 @@ public class PlayerMinimax implements IPlayer, IAuto {
         long tiempoFinal = System.currentTimeMillis();
         double tiempo = (tiempoFinal - tiempoInicial) / 1000.0;
         System.out.println("Temps: " + tiempo + " s");
-        System.out.println(columnaJugar + ":" + max);
         return columnaJugar;
     }
 
     /**
      * Calcula el valor màxim de Minimax per a un estat donat.
-     * 
+     *
      * @param hgs L'estat actual del joc.
      * @param prof La profunditat restant per explorar.
      * @param alpha El millor valor garantit per al jugador MAX.
@@ -127,20 +127,18 @@ public class PlayerMinimax implements IPlayer, IAuto {
         if (hgs.isGameOver() && hgs.GetWinner() != null) {
             return max;
         } else if (prof == 0) {
+            playsExplored++;
             return hgs.calculHeuristica();
         } else {
-            List<MoveNode> movimientos = h.obtenerJugadas(hgs);
+            List<MoveNode> movimientos = hgs.obtenerJugadas();
             for (MoveNode jugada : movimientos) {
-                if (!h.pruned.contains(hgs.getNewHash(jugada.getPoint()))) {
-                    MyStatus nova = new MyStatus(hgs);
-                    nova.placeStone(jugada.getPoint());
-                    int min = valorMin(nova, prof - 1, alpha, beta);
-                    max = Math.max(max, min);
-                    alpha = Math.max(alpha, max);
-                    if (alpha >= beta) {
-                        h.pruned.add(hgs.hash);
-                        break;
-                    }
+                MyStatus nova = new MyStatus(hgs);
+                nova.placeStone(jugada.getPoint());
+                int min = valorMin(nova, prof - 1, alpha, beta);
+                max = Math.max(max, min);
+                alpha = Math.max(alpha, max);
+                if (alpha >= beta) {
+                    break;
                 }
             }
         }
@@ -149,7 +147,7 @@ public class PlayerMinimax implements IPlayer, IAuto {
 
     /**
      * Calcula el valor mínim de Minimax per a un estat donat.
-     * 
+     *
      * @param hgs L'estat actual del joc.
      * @param prof La profunditat restant per explorar.
      * @param alpha El millor valor garantit per al jugador MAX.
@@ -164,18 +162,16 @@ public class PlayerMinimax implements IPlayer, IAuto {
         } else if (prof == 0) {
             return hgs.calculHeuristica();
         } else {
-            List<MoveNode> movimientos = h.obtenerJugadas(hgs);
+            List<MoveNode> movimientos = hgs.obtenerJugadas();
             for (MoveNode jugada : movimientos) {
-                if (!h.pruned.contains(hgs.getNewHash(jugada.getPoint()))) {
-                    MyStatus nova = new MyStatus(hgs);
-                    nova.placeStone(jugada.getPoint());
-                    int max = valorMax(nova, prof - 1, alpha, beta);
-                    min = Math.min(min, max);
-                    beta = Math.min(beta, min);
-                    if (alpha >= beta) {
-                        h.pruned.add(hgs.hash);
-                        break;
-                    }
+
+                MyStatus nova = new MyStatus(hgs);
+                nova.placeStone(jugada.getPoint());
+                int max = valorMax(nova, prof - 1, alpha, beta);
+                min = Math.min(min, max);
+                beta = Math.min(beta, min);
+                if (alpha >= beta) {
+                    break;
                 }
             }
         }

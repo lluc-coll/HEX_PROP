@@ -74,14 +74,14 @@ public class PlayerID implements IPlayer, IAuto {
 
         while (!timeoutFlag) {
             try {
-                iterativeMinimax(m, depth);
+                bestMove = iterativeMinimax(m, depth);
                 System.out.println("Profunditat assolida: " + depth);
                 depth++;
             } catch (TimeoutException e) {
                 break;
             }
         }
-        return new PlayerMove(bestMove, playsExplored, depth, SearchType.MINIMAX_IDS);
+        return new PlayerMove(bestMove, playsExplored, depth-1, SearchType.MINIMAX_IDS);
     }
 
     /**
@@ -109,9 +109,9 @@ public class PlayerID implements IPlayer, IAuto {
      * @param depth La profunditat màxima per a aquesta iteració.
      * @throws TimeoutException Si es produeix un timeout durant la cerca.
      */
-    private void iterativeMinimax(MyStatus status, int depth) throws TimeoutException {
+    private Point iterativeMinimax(MyStatus status, int depth) throws TimeoutException {
         int bestScore = Integer.MIN_VALUE;
-
+        Point best = null;
         List<MoveNode> movimientos = h.obtenerJugadas(status);
 
         for (MoveNode move : movimientos) {
@@ -122,10 +122,11 @@ public class PlayerID implements IPlayer, IAuto {
                 int score = valorMin(newState, depth - 1, Integer.MIN_VALUE, Integer.MAX_VALUE);
                 if (score > bestScore) {
                     bestScore = score;
-                    bestMove = move.getPoint();
+                    best = move.getPoint();
                 }
             }
         }
+        return best;
     }
 
     /**

@@ -38,7 +38,7 @@ public class MyStatus extends HexGameStatus {
         for (int i = 0; i < getSize(); i++) {
             for (int j = 0; j < getSize(); j++) {
                 hash ^= h.taulaHash[i][j][getPos(i, j) + 1];
-                valEstatic += (10 - Math.abs(i - getSize() / 2) + Math.abs(j - getSize() / 2)) * getPos(i, j);
+                valEstatic += (10 - (Math.abs(i - getSize() / 2) + Math.abs(j - getSize() / 2))) * getPos(i, j);
             }
         }
         graf1 = getTableGraph(myColor);
@@ -66,10 +66,10 @@ public class MyStatus extends HexGameStatus {
 
     public int calculHeuristica() {
         int val = 0;
-        val += h.heuristica(graf1, graf2, ini, end);
+        val += h.heuristica(graf1, graf2, ini, end)*3;
         val += valEstatic;
         // falta posar el valor sumatori de les tuples.
-        val += ((tuples1.values().stream().mapToInt(Integer::intValue).sum()) - (tuples2.values().stream().mapToInt(Integer::intValue).sum()))*3;
+        val += (900-(tuples1.values().stream().mapToInt(Integer::intValue).sum()) - (900-tuples2.values().stream().mapToInt(Integer::intValue).sum()));
         return val;
     }
 
