@@ -7,6 +7,7 @@ package edu.upc.epsevg.prop.hex;
 import java.awt.Point;
 import java.util.AbstractMap;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -28,6 +29,8 @@ public class MyStatus extends HexGameStatus {
     Map<Point, Map<Point, Integer>> graf2;
     Point ini = new Point(0, -1);
     Point end = new Point(-1, 0);
+    Map<Point, Integer> tuples1 = new HashMap<>();
+    Map<Point, Integer> tuples2 = new HashMap<>();
 
     public MyStatus(HexGameStatus hgs) {
         super(hgs);
@@ -60,16 +63,22 @@ public class MyStatus extends HexGameStatus {
         valEstatic += (10 - (Math.abs(point.x - getSize() / 2) + Math.abs(point.y - getSize() / 2))) * getPos(point);
         graphsUpdate(point, -getCurrentPlayerColor());
     }
-    
-    public int calculHeuristica(){
+
+    public int calculHeuristica() {
         int val = 0;
         val += h.heuristica(graf1, graf2, ini, end);
-        //val += valEstatic;
+        val += valEstatic;
+        // falta posar el valor sumatori de les tuples.
+        val += ((tuples1.values().stream().mapToInt(Integer::intValue).sum()) - (tuples2.values().stream().mapToInt(Integer::intValue).sum()))*3;
         return val;
     }
-    
+
     public int getNewHash(Point p) {
         return hash ^ h.taulaHash[p.x][p.y][getPos(p.x, p.y) + 1];
+    }
+
+    public int getNewValEstatic(Point p) {
+        return valEstatic + (10 - (Math.abs(p.x - getSize() / 2) + Math.abs(p.y - getSize() / 2))) * getPos(p);
     }
 
     public Map<Point, Map<Point, Integer>> getTableGraph(int col) {
@@ -86,6 +95,7 @@ public class MyStatus extends HexGameStatus {
                     if (i == 1 && j != getSize() - 1 && getPos(p) == 1) {
                         if (getPos(i - 1, j) == 0 && getPos(i - 1, j + 1) == 0) {
                             map.get(ini).put(p, 1);
+                            (myColor == col ? tuples1 : tuples2).merge(ini, 1, Integer::sum);
                         }
                     }
                     if (i == getSize() - 1) {
@@ -94,6 +104,7 @@ public class MyStatus extends HexGameStatus {
                     if (i == getSize() - 2 && j != 0 && getPos(p) == 1) {
                         if (getPos(i + 1, j) == 0 && getPos(i + 1, j - 1) == 0) {
                             map.get(p).put(end, 1);
+                            (myColor == col ? tuples1 : tuples2).merge(p, 1, Integer::sum);
                         }
                     }
                 } else {
@@ -104,6 +115,7 @@ public class MyStatus extends HexGameStatus {
                     if (j == 1 && i != getSize() - 1 && getPos(p) == -1) {
                         if (getPos(i, j - 1) == 0 && getPos(i + 1, j - 1) == 0) {
                             map.get(ini).put(p, 1);
+                            (myColor == -col ? tuples1 : tuples2).merge(ini, 1, Integer::sum);
                         }
                     }
                     if (j == getSize() - 1) {
@@ -112,6 +124,7 @@ public class MyStatus extends HexGameStatus {
                     if (j == getSize() - 2 && i != 0 && getPos(p) == -1) {
                         if (getPos(i, j + 1) == 0 && getPos(i - 1, j + 1) == 0) {
                             map.get(p).put(end, 1);
+                            (myColor == col ? tuples1 : tuples2).merge(p, 1, Integer::sum);
                         }
                     }
                 }
@@ -121,6 +134,7 @@ public class MyStatus extends HexGameStatus {
     }
 
     public Map<Point, Integer> getNeighbors(Point p, int col) {
+        (myColor == col ? tuples1 : tuples2).remove(p);
         Map<Point, Integer> ngbs = new HashMap<>();
         int[][] directions = {
             {-1, 0}, // Izquierda
@@ -154,6 +168,7 @@ public class MyStatus extends HexGameStatus {
                     Point p2 = new Point(p.x + directions[(i + 1) % 6][0], p.y + directions[(i + 1) % 6][1]);
                     if (getPos(p) == col && getPos(x, y) == col && getPos(p1) == 0 && getPos(p2) == 0) {
                         ngbs.put(new Point(x, y), 1);
+                        (myColor == col ? tuples1 : tuples2).merge(p, 1, Integer::sum);
                     }
                 }
             }
@@ -193,7 +208,8 @@ public class MyStatus extends HexGameStatus {
         // Comprovaciones para updatear los nodos auxiliares 
         graf1.put(ini, new HashMap<>());
         graf2.put(ini, new HashMap<>());
-
+        tuples1.remove(ini);
+        tuples2.remove(ini);
         for (int i = 0; i < 2; i++) {
             for (int j = 0; j < getSize(); j++) {
                 Point ij = new Point(i, j);
@@ -210,24 +226,51 @@ public class MyStatus extends HexGameStatus {
                 if (i == 1 && j != getSize() - 1) {
                     if (getPos(ij) == 1 && getPos(i - 1, j) == 0 && getPos(i - 1, j + 1) == 0) {
                         (myColor == 1 ? graf1 : graf2).get(ini).put(ij, 1);
+                        (myColor == 1 ? tuples1 : tuples2).merge(ini, 1, Integer::sum);
                     }
                     if (getPos(ji) == -1 && getPos(j, i - 1) == 0 && getPos(j + 1, i - 1) == 0) {
                         (myColor == -1 ? graf1 : graf2).get(ini).put(ji, 1);
+                        (myColor == -1 ? tuples1 : tuples2).merge(ini, 1, Integer::sum);
                     }
                 }
                 if (i == 1 && j != 0) {
-                    graf1.get(imj).remove(end);
-                    graf2.get(imj).remove(end);
-                    graf1.get(jim).remove(end);
-                    graf2.get(jim).remove(end);
+                    if (graf1.get(imj).containsKey(end)) {
+                        graf1.get(imj).remove(end);
+                        tuples1.merge(imj, 1, (oldValue, newValue) -> Math.max(oldValue - newValue, 0));
+                    }
+                    if (graf2.get(imj).containsKey(end)) {
+                        graf2.get(imj).remove(end);
+                        tuples2.merge(imj, 1, (oldValue, newValue) -> Math.max(oldValue - newValue, 0));
+                    }
+                    if (graf1.get(jim).containsKey(end)) {
+                        graf1.get(jim).remove(end);
+                        tuples1.merge(jim, 1, (oldValue, newValue) -> Math.max(oldValue - newValue, 0));
+                    }
+                    if (graf2.get(jim).containsKey(end)) {
+                        graf2.get(jim).remove(end);
+                        tuples2.merge(jim, 1, (oldValue, newValue) -> Math.max(oldValue - newValue, 0));
+                    }
+
                     if (getPos(imj) == 1 && getPos(getSize() - 1, j) == 0 && getPos(getSize() - 1, j - 1) == 0) {
                         (myColor == 1 ? graf1 : graf2).get(imj).put(end, 1);
+                        (myColor == 1 ? tuples1 : tuples2).merge(imj, 1, Integer::sum);
                     }
                     if (getPos(jim) == -1 && getPos(j, getSize() - 1) == 0 && getPos(j - 1, getSize() - 1) == 0) {
                         (myColor == -1 ? graf1 : graf2).get(jim).put(end, 1);
+                        (myColor == -1 ? tuples1 : tuples2).merge(jim, 1, Integer::sum);
                     }
                 }
             }
         }
+    }
+
+    public List<MoveNode> obtenerJugadas() {
+        List<MoveNode> l = getMoves();
+        l.sort((a, b) -> {
+            int scoreA = getNewValEstatic(a.getPoint());
+            int scoreB = getNewValEstatic(b.getPoint());
+            return Integer.compare(scoreB, scoreA); // Sort Descending
+        });
+        return l;
     }
 }
