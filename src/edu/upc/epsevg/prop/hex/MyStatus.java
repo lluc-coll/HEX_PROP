@@ -20,6 +20,7 @@ public class MyStatus extends HexGameStatus {
     // crear una taula estatica amb size == hgs i per cada casella agafar un valor random per 0, 1, -1
     // recorrer la taula i per cada casella fer hash ^= taulaEstatica[i][j][z] (on < seria 0, 1, -1 o alguna cosa aixi)
     // i per cada place stone fer hash ^= taulaEstatica[placeStone.i][placeStone.j][placeStone.color]
+    Heuristica h = Heuristica.getInstance();
     int myColor;
     int hash = 0;
     int valEstatic = 0;
@@ -33,7 +34,7 @@ public class MyStatus extends HexGameStatus {
         myColor = getCurrentPlayerColor();
         for (int i = 0; i < getSize(); i++) {
             for (int j = 0; j < getSize(); j++) {
-                hash ^= PlayerMinimax.taulaHash[i][j][getPos(i, j) + 1];
+                hash ^= h.taulaHash[i][j][getPos(i, j) + 1];
                 valEstatic += (10 - Math.abs(i - getSize() / 2) + Math.abs(j - getSize() / 2)) * getPos(i, j);
             }
         }
@@ -49,14 +50,26 @@ public class MyStatus extends HexGameStatus {
         this.graf2 = hgs.graf2;
         this.ini = hgs.ini;
         this.end = hgs.end;
+        this.myColor = hgs.myColor;
     }
 
     @Override
     public void placeStone(Point point) {
         super.placeStone(point);
-        hash ^= PlayerMinimax.taulaHash[point.x][point.y][getPos(point.x, point.y) + 1];
-        valEstatic += (10 - Math.abs(point.x - getSize() / 2) + Math.abs(point.y - getSize() / 2)) * getPos(point);
+        hash ^= h.taulaHash[point.x][point.y][getPos(point.x, point.y) + 1];
+        valEstatic += (10 - (Math.abs(point.x - getSize() / 2) + Math.abs(point.y - getSize() / 2))) * getPos(point);
         graphsUpdate(point, -getCurrentPlayerColor());
+    }
+    
+    public int calculHeuristica(){
+        int val = 0;
+        val += h.heuristica(graf1, graf2, ini, end);
+        //val += valEstatic;
+        return val;
+    }
+    
+    public int getNewHash(Point p) {
+        return hash ^ h.taulaHash[p.x][p.y][getPos(p.x, p.y) + 1];
     }
 
     public Map<Point, Map<Point, Integer>> getTableGraph(int col) {
@@ -176,105 +189,44 @@ public class MyStatus extends HexGameStatus {
                 graf2.put(aux, getNeighbors(aux, -myColor));
             }
         }
-        int i = p.x, j = p.y;
-        // Comprovaciones para updatear los nodos auxiliares (parte de los adyacentes directamente)
-        boolean g1 = graf1.get(ini).containsKey(p); // Comprovem quin graf hem de modificar
-        if (i == 0) {
-            if (g1) {
-                graf1.get(ini).put(p, getPos(p) == -myColor ? 1000 : getPos(p) == 0 ? 2 : 0);
-                graf1.get(ini).remove(new Point(i+1, j==0 ? j : j-1));
-                graf1.get(ini).remove(new Point(i+1, j));
-            } else {
-                graf2.get(ini).put(p, getPos(p) == myColor ? 1000 : getPos(p) == 0 ? 2 : 0);
-                graf2.get(ini).remove(new Point(i+1, j==0 ? j : j-1));
-                graf2.get(ini).remove(new Point(i+1, j));
-            }
-        }
-        if (j == 0) {
-            if (g1) {
-                graf1.get(ini).put(p, getPos(p) == myColor ? 1000 : getPos(p) == 0 ? 2 : 0);
-                graf1.get(ini).remove(new Point(i, j+1));
-                graf1.get(ini).remove(new Point(i==0 ? i : i-1, j+1));
-            } else {
-                graf2.get(ini).put(p, getPos(p) == -myColor ? 1000 : getPos(p) == 0 ? 2 : 0);
-                graf2.get(ini).remove(new Point(i, j+1));
-                graf2.get(ini).remove(new Point(i==0 ? i : i-1, j+1));
-            }
-        }
-        g1 = graf1.get(p).containsKey(end); // Comprovem quin graf hem de modificar
-        if (i == getSize() - 1) {
-            if (g1) {
-                graf1.get(p).put(end, 0);
-                graf1.get(ini).remove(new Point(i-1, j==getSize()-1 ? j : j+1));
-                graf1.get(ini).remove(new Point(i-1, j));
-            } else {
-                graf2.get(p).put(end, 0);
-                graf2.get(ini).remove(new Point(i-1, j==getSize()-1 ? j : j+1));
-                graf2.get(ini).remove(new Point(i-1, j));
-            }
-        }
-        if (j == getSize() - 1) {
-            if (g1) {
-                graf1.get(p).put(end, 0);
-                graf1.get(ini).remove(new Point(i-1, j-1));
-                graf1.get(ini).remove(new Point(i==getSize()-1 ? i : i+1, j-1));
-            } else {
-                graf2.get(p).put(end, 0);
-                graf2.get(ini).remove(new Point(i-1, j-1));
-                graf2.get(ini).remove(new Point(i==getSize()-1 ? i : i+1, j-1));
-            }
-        }
-        // Comprovaciones para updatear los nodos auxiliares (parte de los adyacentes indirectamente[dobles])
-        if (i == 1 && j != getSize() - 1) {
-            g1 = graf1.get(ini).containsKey(new Point(i - 1, j)); // Comprovem quin graf hem de modificar
-            if (getPos(i - 1, j) == 0 && getPos(i - 1, j + 1) == 0 && getPos(p) == (g1 ? myColor : -myColor)) {
-                if (g1) {
-                    graf1.get(ini).put(p, 1);
-                } else {
-                    graf2.get(ini).put(p, 1);
+
+        // Comprovaciones para updatear los nodos auxiliares 
+        graf1.put(ini, new HashMap<>());
+        graf2.put(ini, new HashMap<>());
+
+        for (int i = 0; i < 2; i++) {
+            for (int j = 0; j < getSize(); j++) {
+                Point ij = new Point(i, j);
+                Point imj = new Point(getSize() - 2, j);
+                Point ji = new Point(j, i);
+                Point jim = new Point(j, getSize() - 2);
+
+                if (i == 0) {
+                    (myColor == 1 ? graf1 : graf2).get(ini).put(ij, getPos(ij) == -1 ? 1000 : getPos(ij) == 0 ? 2 : 0);
+                    (myColor == -1 ? graf1 : graf2).get(ini).put(ji, getPos(ji) == 1 ? 1000 : getPos(ji) == 0 ? 2 : 0);
+                    (myColor == 1 ? graf1 : graf2).get(new Point(getSize() - 1, j)).put(end, 0);
+                    (myColor == -1 ? graf1 : graf2).get(new Point(j, getSize() - 1)).put(end, 0);
                 }
-            } else {
-                graf1.get(ini).remove(p);
-                graf2.get(ini).remove(p);
-            }
-        }
-        if (i == getSize() - 2 && j != 0) {
-            g1 = graf1.get(new Point(i + 1, j)).containsKey(end); // Comprovem quin graf hem de modificar
-            if (getPos(i + 1, j) == 0 && getPos(i + 1, j - 1) == 0 && getPos(p) == (g1 ? myColor : -myColor)) {
-                if (g1) {
-                    graf1.get(p).put(end, 1);
-                } else {
-                    graf2.get(p).put(end, 1);
+                if (i == 1 && j != getSize() - 1) {
+                    if (getPos(ij) == 1 && getPos(i - 1, j) == 0 && getPos(i - 1, j + 1) == 0) {
+                        (myColor == 1 ? graf1 : graf2).get(ini).put(ij, 1);
+                    }
+                    if (getPos(ji) == -1 && getPos(j, i - 1) == 0 && getPos(j + 1, i - 1) == 0) {
+                        (myColor == -1 ? graf1 : graf2).get(ini).put(ji, 1);
+                    }
                 }
-            } else {
-                graf1.get(p).remove(end);
-                graf2.get(p).remove(end);
-            }
-        }
-        if (j == 1 && i != getSize() - 1 && getPos(p) == (g1 ? myColor : -myColor)) {
-            if (getPos(i, j - 1) == 0 && getPos(i + 1, j - 1) == 0 && getPos(p) == (g1 ? myColor : -myColor)) {
-                g1 = graf1.get(ini).containsKey(new Point(i, j - 1)); // Comprovem quin graf hem de modificar
-                if (g1) {
-                    graf1.get(ini).put(p, 1);
-                } else {
-                    graf2.get(ini).put(p, 1);
+                if (i == 1 && j != 0) {
+                    graf1.get(imj).remove(end);
+                    graf2.get(imj).remove(end);
+                    graf1.get(jim).remove(end);
+                    graf2.get(jim).remove(end);
+                    if (getPos(imj) == 1 && getPos(getSize() - 1, j) == 0 && getPos(getSize() - 1, j - 1) == 0) {
+                        (myColor == 1 ? graf1 : graf2).get(imj).put(end, 1);
+                    }
+                    if (getPos(jim) == -1 && getPos(j, getSize() - 1) == 0 && getPos(j - 1, getSize() - 1) == 0) {
+                        (myColor == -1 ? graf1 : graf2).get(jim).put(end, 1);
+                    }
                 }
-            } else {
-                graf1.get(ini).remove(p);
-                graf2.get(ini).remove(p);
-            }
-        }
-        if (j == getSize() - 2 && i != 0 && getPos(p) == (g1 ? myColor : -myColor)) {
-            g1 = graf1.get(new Point(i, j + 1)).containsKey(end); // Comprovem quin graf hem de modificar
-            if (getPos(i, j + 1) == 0 && getPos(i - 1, j + 1) == 0 && getPos(p) == (g1 ? myColor : -myColor)) {
-                if (g1) {
-                    graf1.get(p).put(end, 1);
-                } else {
-                    graf2.get(p).put(end, 1);
-                }
-            } else {
-                graf1.get(p).remove(end);
-                graf2.get(p).remove(end);
             }
         }
     }

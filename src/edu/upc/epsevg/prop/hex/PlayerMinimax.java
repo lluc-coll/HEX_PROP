@@ -12,17 +12,17 @@ import java.util.*;
  * @author llucc
  */
 public class PlayerMinimax implements IPlayer, IAuto {
-    public static int[][][] taulaHash;
-    Heuristica h = new Heuristica();
+
+    Heuristica h = Heuristica.getInstance();
     String name;
     int depth;
     long playsExplored;
     int color;
 
     public PlayerMinimax(int depth) {
-        this.name = "NOMBRE";
+        this.name = "HEXpertos";
         this.depth = depth;
-        taulaHash = createHashingTable(11);
+        h.taulaHash = Heuristica.createHashingTable(11); // sha de mirar com agafar la mida
     }
 
     @Override
@@ -30,7 +30,6 @@ public class PlayerMinimax implements IPlayer, IAuto {
         color = hgs.getCurrentPlayerColor();
         playsExplored = 0;
         MyStatus m = new MyStatus(hgs);
-        h.heuristica(m.graf1, m.graf2, m.ini, m.end);
         return new PlayerMove(miniMax(m), playsExplored, depth, SearchType.MINIMAX);
     }
 
@@ -64,7 +63,7 @@ public class PlayerMinimax implements IPlayer, IAuto {
         long tiempoFinal = System.currentTimeMillis();
         double tiempo = (tiempoFinal - tiempoInicial) / 1000.0;
         System.out.println("Tiempo: " + tiempo + " s");
-        System.out.println(columnaJugar);
+        System.out.println(columnaJugar + ":" + max);
         return columnaJugar;
     }
 
@@ -73,60 +72,52 @@ public class PlayerMinimax implements IPlayer, IAuto {
 
         if (hgs.isGameOver() && hgs.GetWinner() != null) {
             return max;
-        } else if (prof == 0 || hgs.isGameOver()) {
-            return 0; //heuristicaGlobal(t, colorNB);
+        } else if (prof == 0) {
+            return hgs.calculHeuristica(); //heuristicaGlobal(t, colorNB);
         } else {
             // Con poda: genera y ordena jugadas
             List<MoveNode> movimientos = h.obtenerJugadas(hgs);
             for (MoveNode jugada : movimientos) {
-                MyStatus nova = new MyStatus(hgs);
-                nova.placeStone(jugada.getPoint());
-                int min = valorMin(nova, prof - 1, alpha, beta);
-                max = Math.max(max, min);
-                alpha = Math.max(alpha, max);
-                if (alpha >= beta) {
-                    break;
+                if (!h.pruned.contains(hgs.getNewHash(jugada.getPoint()))) {
+                    MyStatus nova = new MyStatus(hgs);
+                    nova.placeStone(jugada.getPoint());
+                    int min = valorMin(nova, prof - 1, alpha, beta);
+                    max = Math.max(max, min);
+                    alpha = Math.max(alpha, max);
+                    if (alpha >= beta) {
+                        h.pruned.add(hgs.hash);
+                        break;
+                    }
                 }
             }
         }
         return max;
     }
 
-    
     public int valorMin(MyStatus hgs, int prof, int alpha, int beta) {
         int min = 100000;
 
         if (hgs.isGameOver() && hgs.GetWinner() != null) {
             return min;
-        } else if (prof == 0 || hgs.isGameOver()) {
-            return 0; //heuristicaGlobal(t, colorNB);
+        } else if (prof == 0) {
+            return hgs.calculHeuristica();
         } else {
             // Con poda: genera y ordena jugadas
             List<MoveNode> movimientos = h.obtenerJugadas(hgs);
             for (MoveNode jugada : movimientos) {
-                MyStatus nova = new MyStatus(hgs);
-                nova.placeStone(jugada.getPoint());
-                int max = valorMax(nova, prof - 1, alpha, beta);
-                min = Math.min(min, max);
-                beta = Math.min(beta, min);
-                if (alpha >= beta) {
-                    break;
+                if (!h.pruned.contains(hgs.getNewHash(jugada.getPoint()))) {
+                    MyStatus nova = new MyStatus(hgs);
+                    nova.placeStone(jugada.getPoint());
+                    int max = valorMax(nova, prof - 1, alpha, beta);
+                    min = Math.min(min, max);
+                    beta = Math.min(beta, min);
+                    if (alpha >= beta) {
+                        h.pruned.add(hgs.hash);
+                        break;
+                    }
                 }
             }
         }
         return min;
-    }
-
-    public static int[][][] createHashingTable(int size){
-        int[][][] table = new int[size][size][3];
-        Random ran = new Random();
-        for(int i = 0; i<size; i++){
-            for(int j = 0; j<size; j++){
-                for(int z = 0; z<3; z++){
-                    table[i][j][z] = ran.nextInt();
-                }
-            }
-        }
-        return table;
     }
 }

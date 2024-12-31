@@ -13,13 +13,17 @@ import java.util.Map.Entry;
  * @author llucc
  */
 public class Heuristica {
+    private static Heuristica instance;
+    public int[][][] taulaHash;
+    Map<Integer, Point> millorJugada = new HashMap<>();
+    Set<Integer> pruned = new HashSet<>();
     
     public int heuristica(Map<Point, Map<Point, Integer>> graf1, Map<Point, Map<Point, Integer>> graf2, Point ini, Point end) {
         int dij1 = dijkstra(graf1, ini, end);
         int dij2 = dijkstra(graf2, ini, end);
 
-        System.out.println(dij1 + ":" + dij2);
-        return 0;
+        //System.out.println(dij1 + ":" + dij2);
+        return (1000-dij1)-(1000-dij2);
     }
 
     public int dijkstra(Map<Point, Map<Point, Integer>> grafMap, Point start, Point target) {
@@ -33,14 +37,14 @@ public class Heuristica {
         while (!PQ.isEmpty()) {
             Point currentP = PQ.poll();
             if (currentP.equals(target)) {
-                for (int i = 0; i < 11; i++) {
+                /*for (int i = 0; i < 11; i++) {
                     for(int s=0; s<i;s++){System.out.print(" ");}
                     for (int j = 0; j < 11; j++) {
                         System.out.print(distances.get(new Point(j, i)) + " ");
                     }
                     System.out.println();
                 }
-                System.out.println("a");
+                System.out.println("a");*/
                 return distances.get(currentP);
             }
 
@@ -67,8 +71,13 @@ public class Heuristica {
         return -1;
     }
 
-    public List<MoveNode> obtenerJugadas(HexGameStatus h) {
-        return h.getMoves();
+    public List<MoveNode> obtenerJugadas(MyStatus h) {
+        List<MoveNode> l = h.getMoves();
+        if(!pruned.contains(h.hash) && millorJugada.containsKey(h.hash)){
+            l.remove(new MoveNode(new Point(millorJugada.get(h.hash))));
+            l.addFirst(new MoveNode(new Point(millorJugada.get(h.hash))));
+        }
+        return l;
     }
     
     public static int[][][] createHashingTable(int size){
@@ -82,5 +91,12 @@ public class Heuristica {
             }
         }
         return table;
+    }
+    
+    public static Heuristica getInstance(){
+        if (instance == null){
+            instance = new Heuristica();
+        }
+        return instance;
     }
 }

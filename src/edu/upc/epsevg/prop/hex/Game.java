@@ -25,7 +25,7 @@ public class Game {
             @Override
             public void run() {
                 
-                IPlayer player1 = new PlayerMinimax(2);
+                IPlayer player1 = new PlayerID();
                 //IPlayer player1 = new H_E_X_Player(2/*GB*/);
                 
                 IPlayer player2 = new HumanPlayer("Human");
