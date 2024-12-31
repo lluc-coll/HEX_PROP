@@ -58,18 +58,18 @@ public class MyStatus extends HexGameStatus {
     Point end = new Point(-1, 0);
 
     /**
-     * Map de tuples del jugador actual per optimitzar heurístiques.
+     * Map de tuples del jugador actual on cada node que te tupla et diu quantes.
      */
     Map<Point, Integer> tuples1 = new HashMap<>();
 
     /**
-     * Map de tuples de l'oponent per optimitzar heurístiques.
+     * Map de tuples de l'oponent per on cada node que te tupla et diu quantes.
      */
     Map<Point, Integer> tuples2 = new HashMap<>();
 
  /**
      * Constructor que inicialitza l'estat a partir d'un estat de joc HexGameStatus.
-     * 
+     * Calcula els dos grafs, el hash i el valor estatic.
      * @param hgs L'estat del joc HexGameStatus inicial.
      */    
     public MyStatus(HexGameStatus hgs) {
@@ -99,6 +99,8 @@ public class MyStatus extends HexGameStatus {
         this.ini = hgs.ini;
         this.end = hgs.end;
         this.myColor = hgs.myColor;
+        this.tuples1 = hgs.tuples1;
+        this.tuples2 = hgs.tuples2;
     }
     
     /**
@@ -129,7 +131,7 @@ public class MyStatus extends HexGameStatus {
     
     /**
      * Genera un nou valor hash per a una posició específica.
-     * 
+     * Serveix per comprovar el hash d'un MyStatus nou sense haver de recalcular tot el graf.
      * @param p La posició que es vol considerar.
      * @return El valor hash actualitzat.
      */
@@ -139,7 +141,7 @@ public class MyStatus extends HexGameStatus {
     
     /**
      * Genera un nou valor estàtic per a una posició específica.
-     * 
+     * Serveix per comprovar el valorEstatic d'un MyStatus nou sense haver de recalcular tot el graf.
      * @param p La posició que es vol considerar.
      * @return El valor estàtic actualitzat.
      */
@@ -149,7 +151,7 @@ public class MyStatus extends HexGameStatus {
     
     /**
      * Genera un graf de connexions del tauler per a un color específic.
-     * 
+     * Informacio mes extensa dels pesos a la documentació.
      * @param col El color per al qual es vol generar el graf.
      * @return El graf resultant.
      */
@@ -158,7 +160,8 @@ public class MyStatus extends HexGameStatus {
         for (int i = 0; i < getSize(); i++) {
             for (int j = 0; j < getSize(); j++) {
                 Point p = new Point(i, j);
-                map.put(p, getNeighbors(p, col));
+                map.put(p, getNeighbors(p, col)); // afegeix els veins de cada node
+                // afegim els nodes inicials i finals en cas que es compleixin els condicionals.
                 if (col == 1) {
                     if (i == 0) {
                         map.putIfAbsent(ini, new HashMap<>());
@@ -259,7 +262,7 @@ public class MyStatus extends HexGameStatus {
     
     /**
      * Actualitza els grafs després de col·locar una peça.
-     * 
+     * Regenera els veins dels nodes afectats i els nodes inicial i final
      * @param p La posició de la peça.
      * @param col El color del jugador.
      */
