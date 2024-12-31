@@ -8,23 +8,53 @@ import java.awt.Point;
 import java.util.*;
 
 /**
- *
+
  * @author llucc
  */
 public class PlayerMinimax implements IPlayer, IAuto {
 
+    /**
+     * Instància de la classe Heuristica per avaluar l'estat del joc.
+     */
     Heuristica h = Heuristica.getInstance();
+
+    /**
+     * Nom del jugador.
+     */
     String name;
+
+    /**
+     * Profunditat màxima de l'arbre de decisions que explora Minimax.
+     */
     int depth;
+
+    /**
+     * Nombre total de nodes explorats durant la cerca.
+     */
     long playsExplored;
+
+    /**
+     * Color actual del jugador (1 o -1).
+     */
     int color;
 
+    /**
+     * Constructor del jugador Minimax.
+     * 
+     * @param depth Profunditat màxima per a l'algorisme Minimax.
+     */
     public PlayerMinimax(int depth) {
         this.name = "HEXpertos";
         this.depth = depth;
-        h.taulaHash = Heuristica.createHashingTable(11); // sha de mirar com agafar la mida
+        h.taulaHash = Heuristica.createHashingTable(11);
     }
 
+    /**
+     * Selecciona el millor moviment utilitzant l'algorisme Minimax.
+     * 
+     * @param hgs Estat actual del joc (HexGameStatus).
+     * @return Un objecte {@link PlayerMove} amb el millor moviment calculat.
+     */
     @Override
     public PlayerMove move(HexGameStatus hgs) {
         color = hgs.getCurrentPlayerColor();
@@ -33,16 +63,31 @@ public class PlayerMinimax implements IPlayer, IAuto {
         return new PlayerMove(miniMax(m), playsExplored, depth, SearchType.MINIMAX);
     }
 
+    /**
+     * Marca el jugador com a no disponible per gestionar el timeout.
+     * (Actualment no implementat).
+     */
     @Override
     public void timeout() {
-        throw new UnsupportedOperationException("Not supported yet."); // Generated from nbfs://nbhost/SystemFileSystem/Templates/Classes/Code/GeneratedMethodBody
+        throw new UnsupportedOperationException("Not supported yet.");
     }
 
+    /**
+     * Retorna el nom del jugador.
+     * 
+     * @return Nom del jugador.
+     */
     @Override
     public String getName() {
         return name;
     }
 
+    /**
+     * Cerca el millor moviment utilitzant l'algorisme Minimax amb poda alfa-beta.
+     * 
+     * @param hgs L'estat actual del joc.
+     * @return El punt que representa el millor moviment calculat.
+     */
     public Point miniMax(MyStatus hgs) {
         long tiempoInicial = System.currentTimeMillis();
         int max = -300000;
@@ -62,20 +107,28 @@ public class PlayerMinimax implements IPlayer, IAuto {
 
         long tiempoFinal = System.currentTimeMillis();
         double tiempo = (tiempoFinal - tiempoInicial) / 1000.0;
-        System.out.println("Tiempo: " + tiempo + " s");
+        System.out.println("Temps: " + tiempo + " s");
         System.out.println(columnaJugar + ":" + max);
         return columnaJugar;
     }
 
+    /**
+     * Calcula el valor màxim de Minimax per a un estat donat.
+     * 
+     * @param hgs L'estat actual del joc.
+     * @param prof La profunditat restant per explorar.
+     * @param alpha El millor valor garantit per al jugador MAX.
+     * @param beta El millor valor garantit per al jugador MIN.
+     * @return El valor màxim calculat per a l'estat actual.
+     */
     public int valorMax(MyStatus hgs, int prof, int alpha, int beta) {
         int max = -100000;
 
         if (hgs.isGameOver() && hgs.GetWinner() != null) {
             return max;
         } else if (prof == 0) {
-            return hgs.calculHeuristica(); //heuristicaGlobal(t, colorNB);
+            return hgs.calculHeuristica();
         } else {
-            // Con poda: genera y ordena jugadas
             List<MoveNode> movimientos = h.obtenerJugadas(hgs);
             for (MoveNode jugada : movimientos) {
                 if (!h.pruned.contains(hgs.getNewHash(jugada.getPoint()))) {
@@ -94,6 +147,15 @@ public class PlayerMinimax implements IPlayer, IAuto {
         return max;
     }
 
+    /**
+     * Calcula el valor mínim de Minimax per a un estat donat.
+     * 
+     * @param hgs L'estat actual del joc.
+     * @param prof La profunditat restant per explorar.
+     * @param alpha El millor valor garantit per al jugador MAX.
+     * @param beta El millor valor garantit per al jugador MIN.
+     * @return El valor mínim calculat per a l'estat actual.
+     */
     public int valorMin(MyStatus hgs, int prof, int alpha, int beta) {
         int min = 100000;
 
@@ -102,7 +164,6 @@ public class PlayerMinimax implements IPlayer, IAuto {
         } else if (prof == 0) {
             return hgs.calculHeuristica();
         } else {
-            // Con poda: genera y ordena jugadas
             List<MoveNode> movimientos = h.obtenerJugadas(hgs);
             for (MoveNode jugada : movimientos) {
                 if (!h.pruned.contains(hgs.getNewHash(jugada.getPoint()))) {

@@ -8,24 +8,61 @@ import java.awt.Point;
 import java.util.List;
 
 /**
- *
+
+ * 
  * @author llucc
  */
 public class PlayerID implements IPlayer, IAuto {
 
+    /**
+     * Instància de la classe Heuristica utilitzada per avaluar l'estat del joc.
+     */
     Heuristica h = Heuristica.getInstance();
+
+    /**
+     * Nom del jugador.
+     */
     String name;
+
+    /**
+     * Bandera per detectar si s'ha produït un timeout.
+     */
     boolean timeoutFlag;
+
+    /**
+     * Nombre total de nodes explorats durant la cerca.
+     */
     long playsExplored;
+
+    /**
+     * Profunditat actual de la cerca.
+     */
     int depth;
+
+    /**
+     * Color actual del jugador.
+     */
     int color;
+
+    /**
+     * Millor moviment seleccionat durant la cerca.
+     */
     Point bestMove;
 
+    /**
+     * Constructor del jugador. Inicialitza el nom del jugador i les taules de dispersió.
+     */
     public PlayerID() {
         this.name = "HEXpertos";
-        h.taulaHash = Heuristica.createHashingTable(11); // sha de mirar com agafar la mida
+        h.taulaHash = Heuristica.createHashingTable(11);
     }
 
+    /**
+     * Selecciona el millor moviment utilitzant una cerca iterativa amb Minimax.
+     * 
+     * @param hgs L'estat actual del joc (HexGameStatus).
+     * @return Un objecte {@link PlayerMove} amb el millor moviment calculat.
+     */
     @Override
     public PlayerMove move(HexGameStatus hgs) {
         timeoutFlag = false;
@@ -38,7 +75,7 @@ public class PlayerID implements IPlayer, IAuto {
         while (!timeoutFlag) {
             try {
                 iterativeMinimax(m, depth);
-                System.out.println("Profundidad alcanzada: " + depth);
+                System.out.println("Profunditat assolida: " + depth);
                 depth++;
             } catch (TimeoutException e) {
                 break;
@@ -47,16 +84,31 @@ public class PlayerID implements IPlayer, IAuto {
         return new PlayerMove(bestMove, playsExplored, depth, SearchType.MINIMAX_IDS);
     }
 
+    /**
+     * Marca la bandera de timeout com a activada.
+     */
     @Override
     public void timeout() {
         timeoutFlag = true;
     }
 
+    /**
+     * Retorna el nom del jugador.
+     * 
+     * @return Nom del jugador.
+     */
     @Override
     public String getName() {
         return name;
     }
 
+    /**
+     * Realitza la cerca iterativa utilitzant l'algorisme Minimax fins a la profunditat donada.
+     * 
+     * @param status L'estat actual del joc.
+     * @param depth La profunditat màxima per a aquesta iteració.
+     * @throws TimeoutException Si es produeix un timeout durant la cerca.
+     */
     private void iterativeMinimax(MyStatus status, int depth) throws TimeoutException {
         int bestScore = Integer.MIN_VALUE;
 
@@ -76,6 +128,16 @@ public class PlayerID implements IPlayer, IAuto {
         }
     }
 
+    /**
+     * Calcula el valor màxim de Minimax per a un estat donat.
+     * 
+     * @param status L'estat actual del joc.
+     * @param depth La profunditat restant.
+     * @param alpha El millor valor garantit per al jugador MAX.
+     * @param beta El millor valor garantit per al jugador MIN.
+     * @return El valor màxim calculat per a l'estat actual.
+     * @throws TimeoutException Si es produeix un timeout durant la cerca.
+     */
     private int valorMax(MyStatus status, int depth, int alpha, int beta) throws TimeoutException {
         checkTimeout();
         int maxScore = Integer.MIN_VALUE;
@@ -94,7 +156,7 @@ public class PlayerID implements IPlayer, IAuto {
                 MyStatus newState = new MyStatus(status);
                 newState.placeStone(move.getPoint());
                 int score = valorMin(newState, depth - 1, alpha, beta);
-                if (score < maxScore){
+                if (score > maxScore) {
                     maxScore = score;
                     h.millorJugada.put(status.hash, move.getPoint());
                 }
@@ -109,6 +171,16 @@ public class PlayerID implements IPlayer, IAuto {
         return maxScore;
     }
 
+    /**
+     * Calcula el valor mínim de Minimax per a un estat donat.
+     * 
+     * @param status L'estat actual del joc.
+     * @param depth La profunditat restant.
+     * @param alpha El millor valor garantit per al jugador MAX.
+     * @param beta El millor valor garantit per al jugador MIN.
+     * @return El valor mínim calculat per a l'estat actual.
+     * @throws TimeoutException Si es produeix un timeout durant la cerca.
+     */
     private int valorMin(MyStatus status, int depth, int alpha, int beta) throws TimeoutException {
         checkTimeout();
         int minScore = Integer.MAX_VALUE;
@@ -127,7 +199,7 @@ public class PlayerID implements IPlayer, IAuto {
                 MyStatus newState = new MyStatus(status);
                 newState.placeStone(move.getPoint());
                 int score = valorMax(newState, depth - 1, alpha, beta);
-                if (score < minScore){
+                if (score < minScore) {
                     minScore = score;
                     h.millorJugada.put(status.hash, move.getPoint());
                 }
@@ -142,14 +214,27 @@ public class PlayerID implements IPlayer, IAuto {
         return minScore;
     }
 
+    /**
+     * Comprova si s'ha produït un timeout.
+     * 
+     * @throws TimeoutException Si el timeout s'ha activat.
+     */
     private void checkTimeout() throws TimeoutException {
         if (timeoutFlag) {
             throw new TimeoutException("Timeout reached!");
         }
     }
 
+    /**
+     * Excepció personalitzada per gestionar el timeout.
+     */
     private static class TimeoutException extends Exception {
 
+        /**
+         * Constructor de l'excepció TimeoutException.
+         * 
+         * @param message El missatge de l'excepció.
+         */
         public TimeoutException(String message) {
             super(message);
         }
