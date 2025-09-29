@@ -1,6 +1,6 @@
 # Hex Game Documentation
 
-This project is part of an assignment for UPC, where the goal was to implement a Hex game AI using various optimization techniques. My colleague and I were given the graphical part of the game, and we had to implement an heuristic solution to beat our classmates.
+This project is part of an assignment for UPC, where the goal was to implement a Hex game AI using various optimization techniques. We were given the graphical part of the game, and we had to implement an heuristic solution to beat our classmates.
 
 ## Table of Contents
 
