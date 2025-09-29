@@ -151,4 +151,4 @@ Pruning dramatically reduces the number of nodes explored in the decision tree, 
 
 This document provides a comprehensive overview of the Hex game implementation, from the heuristics and algorithms used to optimize the gameplay to the testing and optimization strategies employed. The iterative development process ensures a highly efficient and effective Hex AI capable of competing in complex scenarios.
 
-Done by [lluc-coll]https://github.com/lluc-coll and [danipenalba]https://github.com/danipenalba
+Done by [lluc-coll](https://github.com/lluc-coll) and [danipenalba](https://github.com/danipenalba)
